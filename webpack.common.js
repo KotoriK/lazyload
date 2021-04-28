@@ -1,11 +1,14 @@
 const define = require('./define')
 module.exports = {
     entry: {
-        test: './src/test.ts',
+        lazyload: './src/lazyload.ts',
     },
     output: {
-        filename: '[name].bundle.js',
+        filename: '[name].js',
         path: define.dist_path,
+        library:{
+            export:"LazyLoad"
+        }
     },
     module: {
         rules: [

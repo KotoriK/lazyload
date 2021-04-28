@@ -7,9 +7,10 @@ module.exports = merge(common, {
   optimization:{
     minimizer:[
       new TerserPlugin({
-        parallel: true,
         terserOptions: {
           // https://github.com/webpack-contrib/terser-webpack-plugin#terseroptions
+          sourceMap: true,
+          ecma:2016
         },
       })
     ]
