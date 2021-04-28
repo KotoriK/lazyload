@@ -113,3 +113,4 @@ export default class LazyLoad {
         this.settings = null;
     }
 }
+export const lazyload = (images: NodeListOf<HTMLImageElement>, options: LazyLoadOption) => new LazyLoad(images, options);
