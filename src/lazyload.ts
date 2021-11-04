@@ -40,7 +40,7 @@ export default class LazyLoad {
 
         /* Without observers load everything and bail out early. */
         if (!IntersectionObserver) {
-            this.loadImages();
+            this.load();
             return;
         }
 
@@ -80,11 +80,11 @@ export default class LazyLoad {
 
     loadAndDestroy() {
         if (!this.settings) { return; }
-        this.loadImages();
+        this.load();
         this.destroy();
     }
 
-    loadImages() {
+    load() {
         if (!this.settings) { return; }
 
         const self = this;
