@@ -29,14 +29,14 @@ export type SupportedElements = NodeListOf<SupportedElement>
  * @class LazyLoad
  */
 export default class LazyLoad {
-    constructor(elms: SupportedElements, options?: LazyLoadOption) {
-        this.settings = { ...defaults, ...options };
-        this.elms = elms || document.querySelectorAll(this.settings.selector);
+    constructor(elms?: SupportedElements, options?: LazyLoadOption) {
+        this.opts = { ...defaults, ...options };
+        this.elms = elms || document.querySelectorAll(this.opts.selector);
         this.init();
     }
     elms: SupportedElements
     obs: IntersectionObserver = null
-    settings: LazyLoadOption
+    opts: LazyLoadOption
     init() {
         /* Without observers load everything and bail out early. */
         if (!IntersectionObserver) {
@@ -44,58 +44,44 @@ export default class LazyLoad {
             return;
         }
 
-        const self = this;
-
-        this.obs = new IntersectionObserver(function (entries) {
-
-            Array.prototype.forEach.call(entries, function (entry) {
+        this.obs = new IntersectionObserver((entries) => {
+            for (const entry of entries) {
                 if (entry.isIntersecting) {
-                    self.obs.unobserve(entry.target);
-                    self.doLoad(entry.target)
+                    this.obs.unobserve(entry.target);
+                    this.doLoad(entry.target as SupportedElement)
                 }
-            });
+            }
         }, {
-            root: this.settings.root,
-            rootMargin: this.settings.rootMargin,
-            threshold: [this.settings.threshold]
+            root: this.opts.root,
+            rootMargin: this.opts.rootMargin,
+            threshold: [this.opts.threshold]
         });
 
         this.elms.forEach((image) => {
-            self.obs.observe(image);
-
+            this.obs.observe(image);
         })
     }
 
-    loadAndDestroy() {
-        if (!this.settings) { return; }
-        this.load();
-        this.destroy();
-    }
-
     load() {
-        if (!this.settings) { return; }
-        const { settings } = this
-        Array.prototype.forEach.call(this.elms, this.doLoad);
+        if (!this.opts) { return; }
+        this.elms.forEach(this.doLoad);
     }
     private doLoad = (element: SupportedElement) => {
-        const { settings } = this
-        const src = element.getAttribute(settings.src);
-        const srcset = element.getAttribute(settings.srcset);
+        const src = element.getAttribute(this.opts.src);
+        const srcset = element.getAttribute(this.opts.srcset);
         const tagName = element.tagName.toLowerCase()
-        if (tagName === 'video') {
-            if (src) {
+        if (src) {
+            if (element.src === src || element.style.backgroundImage.includes(src)) {
+                return
+            }
+            if (tagName === 'video' || tagName === 'img') {
                 element.src = src;
+            } else {
+                element.style.backgroundImage = "url('" + src + "')";
             }
-        } else if (tagName === 'img') {
-            if (src) {
-                element.src = src;
-            }
-            if (srcset) {
-                //@ts-ignore
-                element.srcset = srcset;
-            }
-        } else {
-            element.style.backgroundImage = "url('" + src + "')";
+        }
+        if (tagName === 'img' && srcset) {
+            (element as HTMLImageElement).srcset = srcset;
         }
     }
     /**
@@ -103,9 +89,10 @@ export default class LazyLoad {
      * @returns
      */
     destroy() {
-        if (!this.settings) { return; }
+        if (!this.opts) { return; }
         this.obs.disconnect();
-        this.settings = null;
+        this.opts = null;
     }
 }
-export const lazyload = (images: SupportedElements, options: LazyLoadOption) => new LazyLoad(images, options);
+
+export const lazyload = (images?: SupportedElements, options?: LazyLoadOption) => new LazyLoad(images, options);
